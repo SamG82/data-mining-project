@@ -1,3 +1,4 @@
+import numpy
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -31,37 +32,59 @@ y = df['class']
 
 # store list of accuracies from trained models
 accuracies = []
+accuracies_limited = []
+
+# two separate models, one for all features and one for limited features
+all_features_classifier = None
+limited_features_classifier = None
+
+# number of times to train the models
+training_iterations = 500
 
 # iteratively train model 500 times
-for i in range(500):
+for i in range(training_iterations):
     # split data set 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
     
     # train model
-    clf = DecisionTreeClassifier()
-    clf.fit(X_train, y_train)
+    all_features_classifier = DecisionTreeClassifier()
+    all_features_classifier.fit(X_train, y_train)
 
     # get predictions
-    y_pred = clf.predict(X_test)
+    y_pred = all_features_classifier.predict(X_test)
 
     # store accuracy in the accuracies list
     accuracy = accuracy_score(y_test, y_pred)
     accuracies.append(accuracy)
 
-    importances = clf.feature_importances_
-    feature_names = X.columns
+# same process using limited features
+for i in range(training_iterations):
+    
+    # using X_limited instead of X
+    X_train, X_test, y_train, y_test = train_test_split(X_limited, y, test_size=0.3, random_state=42)
 
-print(f"Mean Accuracy: {sum(accuracies) / len(accuracies)}")
+    limited_features_classifier = DecisionTreeClassifier()
+    limited_features_classifier.fit(X_train, y_train)
 
-# show histogram of model accuracies
-plt.hist(accuracies, bins=20)
+    y_pred = limited_features_classifier.predict(X_test)
+
+    accuracy = accuracy_score(y_test, y_pred)
+    accuracies_limited.append(accuracy)
+
+
+# generate bins within relevant range
+bins = numpy.linspace(0.5, 0.7, 100)
+
+# plot histogram to compare accuracies - interesting note: accuracies using less features tend to centralize around their mean with less deviation
+plt.hist([accuracies, accuracies_limited], bins, label=['All features', 'Limited features'])
+plt.legend(loc='upper right')
 plt.xlabel("Decision Tree accuracy")
 plt.ylabel("Instance Count")
 plt.show()
 
-# show bar graph of feature importance 
+# show bar graph of feature importances
 plt.figure(figsize=(10, 6))
-plt.barh(feature_names, importances, color='skyblue')
+plt.barh(X.columns, all_features_classifier.feature_importances_, color='skyblue')
 plt.xlabel('Feature Importance Score')
 plt.ylabel('Features')
 plt.title('Decision Tree Classifier Feature Importances')
