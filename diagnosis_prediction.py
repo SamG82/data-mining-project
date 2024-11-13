@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn import svm, metrics
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
 
 # all individual features
 feature_names = ['radius', 'texture', 'perimeter', 'area', 'smoothness', 'compactness', 'concavity', 'concave_points', 'symmetry', 'fractal_dimension']
@@ -58,7 +59,7 @@ clf = svm.SVC(kernel='linear')
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
-print(metrics.accuracy_score(y_test, y_pred))
+print(f"SVM accuracy: {metrics.accuracy_score(y_test, y_pred)}")
 
 # create the svm line
 w = clf.coef_[0]
@@ -72,6 +73,16 @@ svm_y = -(w[0] / w[1]) * svm_x - b / w[1]
 
 # plot the svm line
 plt.plot(svm_x, svm_y, c='black', label='SVM Decision Boundary')
+
+# create and train KNN to see if better than SVM
+# 2 neighbors because of 2 distinct groups
+knn = KNeighborsClassifier(n_neighbors=2)
+
+knn.fit(X_train, y_train)
+y_pred = knn.predict(X_test)
+
+# almost always outperformed by SVM
+print(F"KNN accuracy: {metrics.accuracy_score(y_test, y_pred)}")
 
 # red for malignant, blue for benign
 colors = {
